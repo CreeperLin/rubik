@@ -763,20 +763,9 @@ void SolveTE(int cs, int d)
 			}
 			else
 			{
-				return;
+				formula("U2");
 			}
-			if (GetDir(i, 1) == d)
-			{
-				formula("B'");
-			}
-			else if (GetDir(i, -1) == d)
-			{
-				formula("B");
-			}
-			else if (i != d)
-			{
-				formula("B2");
-			}
+			Trotate(d, i, 5 - cside);
 			crot = d;
 			formula("U2");
 			return;
@@ -792,35 +781,13 @@ void SolveTE(int cs, int d)
 			printf("found in middle %d\n", i);
 			if (sc != bscol[cs])
 			{
-				if (GetDir(i, 1) == d)
-				{
-					formula("F");
-				}
-				else if (GetDir(i, -1) == d)
-				{
-					formula("F'");
-				}
-				else if (i != d)
-				{
-					formula("F2");
-				}
+				Trotate(i, d, cside);
 				crot = i;
 				formula("U'");
 			}
 			else
 			{
-				if (i == d)
-				{
-					formula("F'");
-				}
-				else if (GetDir(d, -1) == i)
-				{
-					formula("F2");
-				}
-				else if (GetDir(d, 2) == i)
-				{
-					formula("F");
-				}
+				Trotate(GetDir(i, 1), d, cside);
 				crot = i;
 				formula("L");
 				crot = d;
@@ -842,20 +809,17 @@ void SolveTE(int cs, int d)
 		{
 			printf("found in bottom %d\n", i);
 			crot = i;
-			if (GetDir(i, 1) == d)
+			if (sc == bscol[cs])
 			{
-				formula("F'");
+				Trotate(d, i, cside);
+				formula("U2");
 			}
-			else if (GetDir(i, -1) == d)
+			else
 			{
-				formula("F");
+				Trotate(d, GetDir(i + 1), cside);
+				formula("UR'U'");
 			}
-			else if (i != d)
-			{
-				formula("F2");
-			}
-			formula("U2");
-			SolveTE(cs, i);
+			crot = d;
 			return;
 		}
 	}
