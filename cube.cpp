@@ -723,6 +723,25 @@ int IsLineSolv(int n, int dep)
 	return 1;
 }
 
+void Trotate(int cd, int td, int rs)
+{
+	int t = cside;
+	cside = rs;
+	if (GetDir(cd, 1) == td)
+	{
+		formula("F'");
+	}
+	else if (GetDir(cd, -1) == td)
+	{
+		formula("F");
+	}
+	else if (cd != td)
+	{
+		formula("F2");
+	}	
+	cside = t;
+}
+
 void SolveTE(int cs, int d)
 {
 	int scol = bscol[cs] + bscol[GetNSide(cs, d)];
