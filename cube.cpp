@@ -729,11 +729,11 @@ void Trotate(int cd, int td, int rs)
 	cside = rs;
 	if (GetDir(cd, 1) == td)
 	{
-		formula("F'");
+		formula("F");
 	}
 	else if (GetDir(cd, -1) == td)
 	{
-		formula("F");
+		formula("F'");
 	}
 	else if (cd != td)
 	{
