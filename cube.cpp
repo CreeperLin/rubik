@@ -578,6 +578,8 @@ char rtof(int r)
 }
 
 int IsCrossSolv(int m);
+pos DeptoPos(int s, int dep, int i);
+int GetDir(int cd, int chg);
 int main()
 {
 	initcol();
@@ -586,6 +588,8 @@ int main()
 	while (1)
 	{
 		int ch = getchar();
+		char exp[5];
+		gets(exp);
 		switch (ch)
 		{
 		case 'a':
@@ -616,14 +620,13 @@ int main()
 		case 's':
 			LBLSolution();
 			getchar();
-			getchar();
 			break;
 		case 'm':
 			{
 				while (1)
 				{
-					int a[5];
-					for (int i = 0; i < 5; i++)
+					int a[10];
+					for (int i = 0; i < 10; i++)
 					{
 						a[i] = rand() % 6;
 						printf("%c ", rtof(a[i]));
@@ -655,6 +658,21 @@ int main()
 				printf("=。=\n");
 			}
 			getchar();
+			break;
+		case 'o':
+			for (int i = 1; i < 5; i++)
+			{
+				int ti = i;
+				if (i == 1 || i == 3)
+				{
+					ti = GetDir(i, 2);
+				}
+				pos cp = DeptoPos(ti, n, n);
+				int sc = GetNTile(cside, 5, cp), fc = GetNTile(cside, i, DeptoPos(i, n, 0));
+				int ct = sc + fc + GetNTile(cside, GetDir(i, -1),
+											DeptoPos(GetDir(i, -1), n, n));
+				printf("%d,%d %d %d %d %d\n", cp.x, cp.y, sc, fc, ct - sc - fc, ct);
+			}
 			getchar();
 			break;
 		case 'c':
@@ -674,7 +692,6 @@ int main()
 				if (Recursolv(0, i))
 				{
 					printf("Cracked\n");
-					getchar();
 					getchar();
 					break;
 				}
@@ -757,7 +774,7 @@ int IsSideSolv(int m)
 	{
 		for (int y = 0; y < N; y++)
 		{
-			if (tile[n][x][y] != bscol[m])
+			if (tile[m][x][y] != bscol[m])
 			{
 				return 0;
 			}
@@ -906,13 +923,13 @@ void SolveTE(int cs, int d, int ofs)
 	}
 	for (int i = 1; i < 5; i++)
 	{
-		pos cp = DeptoPos(i, 2, 1);
+		pos cp = DeptoPos(i, n, 1);
 		if (i == 1 || i == 3)
 		{
 			cp.y = n - cp.y;
 		}
 		int sc = GetNTile(cs, 5, cp);
-		int ct = sc + GetNTile(cs, i, DeptoPos(i, 2, 1));
+		int ct = sc + GetNTile(cs, i, DeptoPos(i, n, 1));
 		printf("bottom pos %d,%d sc %d ct %d\n", cp.x, cp.y, sc, ct);
 		if (ct == scol)
 		{
@@ -937,6 +954,7 @@ void SolveTC(int cs, int d)
 {
 	int scol = bscol[cs] + bscol[GetNSide(cs, d)] + bscol[GetNSide(cs, GetDir(d, -1))];
 	crot = d;
+	printf("searching for %d dir %d\n", scol, d);
 	for (int i = 1; i < 5; i++)
 	{
 		pos cp = DeptoPos(i, n, 0);
@@ -945,47 +963,87 @@ void SolveTC(int cs, int d)
 									DeptoPos(GetDir(i, -1), 0, n));
 		if (ct == scol)
 		{
+			printf("found in top %d\n", i);
 			crot = i;
 			if (sc == bscol[cs])
 			{
-				formula("UB'U'");
+				if (GetDir(d, 1) == i)
+				{
+					formula("U");
+					Trotate(d, i, 5 - cside);
+					formula("U'");
+					crot = d;
+					formula("L'B'L");
+				}
+				else if (GetDir(i, 1) == d)
+				{
+					formula("L'");
+					Trotate(d, i, 5 - cside);
+					formula("L");
+					crot = d;
+					formula("UBU'");
+				}
+				else
+				{
+					formula("U");
+					crot = d;
+					formula("U");
+					formula("B2");
+					formula("U'");
+					crot = i;
+					formula("U'");
+				}
 			}
 			else if (fc == bscol[cs])
 			{
-				formula("UBU'B'UBU'");
+				formula("L'BL");
+				Trotate(d, i, 5 - cside);
+				crot = d;
+				formula("UBU'");
 			}
 			else
 			{
-				formula("L'B'LBL'B'L");
+				formula("UB'U'");
+				Trotate(d, i, 5 - cside);
+				crot = d;
+				formula("L'B'L");
 			}
 			crot = d;
-			formula("U2");
 			return;
 		}
 	}
 	for (int i = 1; i < 5; i++)
 	{
-		pos cp = DeptoPos(i, 2, 0);
-		int sc = GetNTile(cs, 5, cp), fc = GetNTile(cs, i, DeptoPos(i, 0, 0));
+		int ti = i;
+		if (i == 1 || i == 3)
+		{
+			ti = GetDir(i, 2);
+		}
+		pos cp = DeptoPos(ti, n, n);
+		int sc = GetNTile(cs, 5, cp), fc = GetNTile(cs, i, DeptoPos(i, n, 0));
 		int ct = sc + fc + GetNTile(cs, GetDir(i, -1),
-									DeptoPos(GetDir(i, -1), 0, n));
+									DeptoPos(GetDir(i, -1), n, n));
 		if (ct == scol)
 		{
-			crot = i;
+			printf("found in bottom %d\n", i);
+			crot = d;
 			if (sc == bscol[cs])
 			{
-				formula("UB'U'");
+				crot = i;
+				Trotate(GetDir(d, 2), i, 5 - cside);
+				crot = d;
+				formula("UBU'L'B'L");
 			}
 			else if (fc == bscol[cs])
 			{
-				formula("UBU'B'UBU'");
+				Trotate(d, i, 5 - cside);
+				formula("UBU'");
 			}
 			else
 			{
-				formula("L'B'LBL'B'L");
+				Trotate(d, i, 5 - cside);
+				formula("L'B'L");
 			}
-			crot = d;
-			formula("U2");
 			return;
 		}
 	}
@@ -1044,8 +1102,16 @@ void LBLSolution()
 			crot = 1;
 		}
 	}
-	Trotate(fsb, GetDir(fsb, ofs), fsd);
-	getchar();
+	Trotate(fsb, GetDir(fsb, ofs), fsd);	// layer alignment
+	if (!IsCrossSolv(fsd))
+	{
+		printf("Cross not solved, sub terminated\n");
+		return;
+	}
+	else
+	{
+		printf("Cross solved, tap to proceed\n");
+	}
 	getchar();
 	printf("fill corners\n");
 	for (int i = 1; i < 5; i++)
@@ -1056,9 +1122,15 @@ void LBLSolution()
 		int ct = tile[fsd][cp.x][cp.y];
 		if (ct != bscol[fsd] || GetNTile(fsd, i, DeptoPos(i, 0, 0)) != bscol[GetNSide(fsd, i)])
 		{
+			printf("solving %d\n", i);
 			SolveTC(fsd, i);
 			crot = 1;
 		}
 	}
-	printf("solving the second layer\n");
+	if (!IsSideSolv(fsd) || !IsLineSolv(fsd, 0))
+	{
+		printf("Layer not solved, sub terminated\n");
+		return;
+	}
+	printf("solving the second(mid) layer\n");
 }
