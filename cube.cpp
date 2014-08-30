@@ -577,10 +577,6 @@ char rtof(int r)
 	}
 }
 
-int IsCrossSolv(int m);
-int IsLineSolv(int m, int dep);
-pos DeptoPos(int s, int dep, int i);
-int GetDir(int cd, int chg);
 int main()
 {
 	initcol();
@@ -628,7 +624,7 @@ int main()
 				while (++t)
 				{
 					int a[10];
-					for (int i = 0; i < 10; i++)
+					for (int i = 0; i < 5; i++)
 					{
 						a[i] = rand() % 6;
 						printf("%c ", rtof(a[i]));
@@ -636,7 +632,7 @@ int main()
 					}
 					putchar('\n');
 					LBLSolution();
-					if (IsCrossSolv(cside) && IsLineSolv(cside, 0) && IsLineSolv(cside, 1))
+					if (IsCubeRst())
 					{
 						s++;
 						printf("pass\n");
@@ -652,17 +648,6 @@ int main()
 				}
 				break;
 			}
-		case 'n':
-			if (IsCrossSolv(cside))
-			{
-				printf("pass\n");
-			}
-			else
-			{
-				printf("=。=\n");
-			}
-			getchar();
-			break;
 		case 'c':
 			for (int i = 0; i < 6; i++)
 			{
@@ -780,11 +765,24 @@ int IsLineSolv(int m, int dep)
 	{
 		for (int s = 1; s < 4; s++)
 		{
-			pos cp = DeptoPos(s, dep, i);
-			if (GetNTile(m, s, cp) != bscol[GetNSide(m, s)])
+			if (GetNTile(m, s, DeptoPos(s, dep, i)) != bscol[GetNSide(m, s)])
 			{
 				return 0;
 			}
+		}
+	}
+	return 1;
+}
+
+int IsEdgeSolv(int m)
+{
+	for (int i = 1; i < 5; i++)
+	{
+		pos cp = DeptoPos(i, n, 1);
+		int ct = tile[m][cp.x][cp.y];
+		if (ct != bscol[m])
+		{
+			return 0;
 		}
 	}
 	return 1;
@@ -1088,6 +1086,214 @@ void SolveMC(int cs, int d, int p)
 	}
 }
 
+void SolveLE(int cs)
+{
+	cside = cs;
+	crot = 1;
+	int ec = 0, fe = 0, se = 0;
+	for (int i = 1; i < 5; i++)
+	{
+		pos cp = DeptoPos(i, n, 1);
+		if (tile[cs][cp.x][cp.y] == bscol[cs])
+		{
+			printf("edge found in %d\n", i);
+			if (ec == 1)
+			{
+				se = i;
+			}
+			else if (!ec)
+			{
+				fe = i;
+			}
+			ec++;
+		}
+	}
+	switch (ec)
+	{
+	case 0:
+		printf("first edge not found\n");
+		formula("DRFR'F'D'");
+		break;
+	case 2:
+		switch (se - fe)
+		{
+		case 1:
+			crot = GetDir(se, 2);
+			break;
+		case 2:
+			crot = fe + 1;
+			break;
+		case 3:
+			crot = 1;
+			break;
+		default:
+			printf("error occured\n");
+		}
+		formula("DRFR'F'D'");
+		if (se - fe == 2)
+		{
+			return;
+		}
+		break;
+	case 4:
+		return;
+	}
+	SolveLE(cs);
+}
+
+void SolveLC(int cs)
+{
+	cside = cs;
+	crot = 1;
+	int cc = 0, fc = 0, sc = 0;
+	for (int i = 1; i < 5; i++)
+	{
+		pos cp = DeptoPos(i, n, 0);
+		if (tile[cs][cp.x][cp.y] == bscol[cs])
+		{
+			printf("corner found in %d\n", i);
+			if (cc == 1)
+			{
+				sc = i;
+			}
+			else if (!cc)
+			{
+				fc = i;
+			}
+			cc++;
+		}
+	}
+	int k = GetDir(fc, 1);
+	int l = GetDir(sc, 1);
+	printf("%d %d %d\n", cc, fc, sc);
+	switch (cc)
+	{
+	case 0:
+		printf("no corner found\n");
+		formula("LF2L'F'LF'L'");
+		break;
+	case 1:
+		if (GetNTile(cs, k, DeptoPos(k, 0, 0)) == bscol[cs])
+		{
+			crot = GetDir(fc, 2);
+			formula("R'F2RFR'FR");
+		}
+		else
+		{
+			crot = k;
+			formula("LF2L'F'LF'L'");
+		}
+		break;
+	case 2:
+		switch (sc - fc)
+		{
+		case 1:
+			if (GetNTile(cs, l, DeptoPos(l, 0, 0)) == bscol[cs])
+			{
+				crot = sc;
+			}
+			else
+			{
+				crot = fc;
+			}
+			formula("R'F2RFR'FR");
+			break;
+		case 3:
+			if (GetNTile(cs, k, DeptoPos(k, 0, 0)) == bscol[cs])
+			{
+				crot = fc;
+			}
+			else
+			{
+				crot = sc;
+			}
+			formula("R'F2RFR'FR");
+			break;
+		case 2:
+			if (GetNTile(cs, k, DeptoPos(k, 0, 0)) == bscol[cs])
+			{
+				crot = GetDir(fc, 2);
+			}
+			else
+			{
+				crot = fc;
+			}
+			formula("R'D'L'DRD'LD");
+			return;
+		default:
+			printf("error occured\n");
+			return;
+		}
+		break;
+	case 4:
+		return;
+	}
+	SolveLC(cs);
+}
+
+void SolveLP(int cs)
+{
+	cside = cs;
+	crot = 1;
+	int sl = 0, ulc = 0, lul = 0, sc = 0;
+	for (int i = 1; i < 5; i++)
+	{
+		int bc = GetNTile(cs, i, DeptoPos(i, 0, 0));
+		if (GetNTile(cs, i, DeptoPos(i, 0, 2)) == bc)
+		{
+			if (GetNTile(cs, i, DeptoPos(i, 0, 1)) == bc)
+			{
+				sc++;
+				sl = i;
+			}
+			else
+			{
+				lul = i;
+				ulc++;
+			}
+		}
+	}
+	printf("%d %d  %d %d\n", ulc, sc, lul, sl);
+	if (sc == 4)
+	{
+		return;
+	}
+	if (ulc == 3)
+	{
+		if (GetNTile(cs, GetDir(sl, 1), DeptoPos(GetDir(sl, 1), 0, 1)) ==
+			GetNTile(cs, GetDir(sl, -1), DeptoPos(GetDir(sl, -1), 0, 0)))
+		{
+			crot = GetDir(sl, -1);
+			formula("L2F'D'UL2DU'F'L2");
+		}
+		else
+		{
+			crot = GetDir(sl, 1);
+			formula("R2FDU'R2D'UFR2");
+		}
+		return;
+	}
+	else if (ulc == 4)
+	{
+		formula("R'F2RFR'FR");
+		crot = GetDir(crot, 1);
+		formula("LF2L'F'LF'L'");
+	}
+	else
+	{
+		if (sc)
+		{
+			crot = GetDir(sl, -1);
+		}
+		else
+		{
+			crot = GetDir(lul, -1);
+		}
+		formula("R2D2R'U'RD2R'UR'");
+	}
+	SolveLP(cs);
+}
+
 void LBLSolution()
 {
 	int fsd = 0;
@@ -1191,5 +1397,30 @@ void LBLSolution()
 		printf("Mid layer not solved, sub terminated\n");
 		return;
 	}
-	printf("Solving the last layer\n");
+	printf("Solving the last layer edge\n");
+	SolveLE(5 - fsd);
+	if (!IsEdgeSolv(5 - fsd))
+	{
+		printf("Last layer edge not solved, sub terminated\n");
+		return;
+	}
+	printf("Solving the last layer corner\n");
+	SolveLC(5 - fsd);
+	printf("Permutating the last layer\n");
+	SolveLP(5 - fsd);
+	printf("2-3 Alignment\n");
+	if (GetNTile(cside, 1, DeptoPos(1, 0, 0)) == bscol[GetNSide(cside, 2)])
+	{
+		formula("F");
+	}
+	if (GetNTile(cside, 1, DeptoPos(1, 0, 0)) == bscol[GetNSide(cside, 4)])
+	{
+		formula("F'");
+	}
+	if (GetNTile(cside, 1, DeptoPos(1, 0, 0)) == bscol[GetNSide(cside, 3)])
+	{
+		formula("F2");
+	}
+	cside = fsd;
+	crot = 1;
 }
