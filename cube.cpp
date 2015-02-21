@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ncurses.h>
+#include <unistd.h>
 #define N 3
 int tile[6][N][N];
 int n = N - 1;
@@ -9,6 +10,7 @@ int cside = 0, crot = 1;
 int bscol[6];
 attr_t attr[8];
 int scrw, scrh;
+int step;
 struct pos
 {
 	int x;
@@ -382,7 +384,7 @@ void prtcsd(int s, int o)
 void prtcube()
 {
 	clear();
-	int pt = 5, pl = (scrw - 18) / 2;
+	int pt = scrh / 4, pl = (scrw - 18) / 2;
 	move(pt, pl + N * 2);
 	prtcsd(GetNSide(cside, 1), GetNSideO(cside, 1));
 	move(pt + N, pl);
@@ -495,6 +497,7 @@ void formula(const char fml[])
 			break;
 		}
 		int lp = 1;
+		step++;
 		switch (fml[i + 1])
 		{
 		case '\'':
@@ -503,6 +506,7 @@ void formula(const char fml[])
 			break;
 		case '2':
 			lp = 2;
+			step++;
 			break;
 		}
 		printw("%d,%d ", rot, lp);
@@ -587,12 +591,15 @@ int main()
 				break;
 			}
 		case 's':
+			step = 0;
 			LBLSolution();
+			printw("took %d step(s).\n", step);
+			refresh();
 			getch();
 			break;
 		case 'm':
 			{
-				int s = 0, t = 0;
+				int s = 0, t = 0, tst = 0;
 				while (++t)
 				{
 					int a[20];
@@ -603,11 +610,15 @@ int main()
 						rotate(a[i], 0);
 					}
 					printw("\n");
+					step = 0;
 					LBLSolution();
 					if (IsCubeRst())
 					{
 						s++;
-						printw("pass\n");
+						tst += step;
+						printw("pass with %d avg:%d\n", step, tst / s);
+						refresh();
+						usleep(100000);
 						clear();
 					}
 					else
