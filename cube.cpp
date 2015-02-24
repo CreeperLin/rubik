@@ -599,8 +599,8 @@ int main()
 			break;
 		case 'm':
 			{
-				int s = 0, t = 0, tst = 0;
-				while (++t)
+				int tst = 0, s=0;
+				while (1)
 				{
 					int a[20];
 					for (int i = 0; i < 20; i++)
@@ -623,8 +623,6 @@ int main()
 					}
 					else
 					{
-						printw("=。= %d/%d\n", s, t);
-						getch();
 						break;
 					}
 					initcube();
